@@ -31,28 +31,41 @@ class Network:
             (self.routing_tables[dest])[source][dest] = cost
 
     def computeDV(self, router_id):
-        distance_vector = {router_id: 0}
-        # Update the distance vector from self.graph
+        INFINITY = float('inf')
+        routers = set()
+        links = []
         for source, dest, cost in self.graph:
-            if source != router_id:
-                continue
-            if dest not in self.routing_tables:
-                self.routing_tables[dest] = {}
-            self.routing_tables[dest][source] = cost
+            routers.add(source)
+            routers.add(dest)
+            links.append((source, dest, cost))
 
-        # Iterate over the routing tables to compute the distance vector
-        for dest, routes in self.routing_tables.items():
-            if dest == router_id:
-                continue
-            min_cost = float('inf')
-            for source, cost in routes.items():
-                if source == router_id:
-                    continue
-                if source in distance_vector:
-                    min_cost = min(min_cost, distance_vector[source] + cost)
-            distance_vector[dest] = min_cost
+        distance, nexthop = self.bellman_ford(router_id, routers, links)
+
+        distance_vector = {}
+        for dest in distance:
+            if dest != router_id:
+                distance_vector[dest] = distance[dest]
 
         return distance_vector
+    
+    def bellman_ford(self, dst, routers, links):
+        INFINITY = float('inf')
+        distance = {}
+        nexthop = {}
+        
+        for r in routers:
+            distance[r] = INFINITY
+            nexthop[r] = None
+
+        distance[dst] = 0
+
+        for _ in range(len(routers) - 1):
+            for (r1, r2, dist) in links:
+                if distance[r1] + dist < distance[r2]:
+                    distance[r2] = distance[r1] + dist
+                    nexthop[r2] = r1
+
+        return distance, nexthop
 
 
 
