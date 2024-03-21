@@ -23,7 +23,7 @@ def bellman_ford(dst, routers, links):
     """
     INFINITY = float('inf')
     distance = {r: INFINITY for r in routers}
-    nexthop = {r: None for r in routers}
+    nexthop = {r: dst for r in routers}
 
     distance[dst] = 0
 
@@ -51,6 +51,21 @@ def distance_vector_routing(topology):
 
     return distance_vectors, next_hops
 
+def write_output_file(distance_vectors, next_hops, messages):
+    """
+    Writes the forwarding table to an output file.
+    """
+    with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'w') as file:
+        for router in sorted(distance_vectors.keys()):
+            for dst in sorted(distance_vectors[router].keys()):
+                if distance_vectors[router][dst] != float('inf'):
+                    file.write(f"{dst} {next_hops[router][dst]} {distance_vectors[router][dst]}\n")
+                #if dst != router and distance_vectors[router][dst] != float('inf'):
+                    #file.write(f"{dst} {next_hops[router][dst]} {distance_vectors[router][dst]}\n")
+
+
+
+
 
 if __name__ == '__main__':
     #if len(sys.argv) != 4:
@@ -68,12 +83,33 @@ if __name__ == '__main__':
         (4, 5, 1)
     ]
 
+    messages = [
+        (2, 1, "here is a message from 2 to 1"),
+        (3, 5, "this message gets sent from 3 to 5")
+    ]
+
+    changes = [
+        (2, 4, 1),
+        (2, 4, -999)
+    ]
+
     # Running the simulation
     final_distance_vectors, final_next_hops = distance_vector_routing(topology)
-    print("Distance Vectors:")
-    print(final_distance_vectors)
-    print("Next Hops:")
-    print(final_next_hops)
+
+        # Running the simulation
+    final_distance_vectors, final_next_hops = distance_vector_routing(topology)
+
+    # Writing to output file as per the requirement
+    write_output_file(final_distance_vectors, final_next_hops, messages)
+
+    # Returning the final distance vectors and next hops to check correctness
+    print(final_distance_vectors, final_next_hops, "C:\\Git Repositories\\Routing\\src\\output.txt")
+
+
+    #print("Distance Vectors:")
+    #print(final_distance_vectors)
+    #print("Next Hops:")
+    #print(final_next_hops)
     #topologyFile = "C:\\Git Repositories\\Routing\\src\\topology.txt"
     #messageFile = "C:\\Git Repositories\\Routing\\src\\message.txt"
     #changesFile = "C:\\Git Repositories\\Routing\\src\\changes.txt"
