@@ -1,8 +1,3 @@
-from network import Network
-import sys
-
-
-
 def parse_topology(topology):
     """
     Parses the topology file and returns a graph represented as a dictionary of dictionaries.
@@ -60,21 +55,9 @@ def write_output_file(distance_vectors, next_hops, messages):
             for dst in sorted(distance_vectors[router].keys()):
                 if distance_vectors[router][dst] != float('inf'):
                     file.write(f"{dst} {next_hops[router][dst]} {distance_vectors[router][dst]}\n")
-                #if dst != router and distance_vectors[router][dst] != float('inf'):
-                    #file.write(f"{dst} {next_hops[router][dst]} {distance_vectors[router][dst]}\n")
-
-
-
 
 
 if __name__ == '__main__':
-    #if len(sys.argv) != 4:
-     #   print("wrong number of arguments provided to program")
-      #  sys.exit(1)
-
-    #topologyFile = sys.argv[1]
-    #messageFile = sys.argv[2]
-    #changesFile = sys.argv[3]
     topology = [
         (1, 2, 8),
         (2, 3, 3),
@@ -96,7 +79,7 @@ if __name__ == '__main__':
     # Running the simulation
     final_distance_vectors, final_next_hops = distance_vector_routing(topology)
 
-        # Running the simulation
+    # Running the simulation
     final_distance_vectors, final_next_hops = distance_vector_routing(topology)
 
     # Writing to output file as per the requirement
@@ -105,11 +88,3 @@ if __name__ == '__main__':
     # Returning the final distance vectors and next hops to check correctness
     print(final_distance_vectors, final_next_hops, "C:\\Git Repositories\\Routing\\src\\output.txt")
 
-
-    #print("Distance Vectors:")
-    #print(final_distance_vectors)
-    #print("Next Hops:")
-    #print(final_next_hops)
-    #topologyFile = "C:\\Git Repositories\\Routing\\src\\topology.txt"
-    #messageFile = "C:\\Git Repositories\\Routing\\src\\message.txt"
-    #changesFile = "C:\\Git Repositories\\Routing\\src\\changes.txt"
