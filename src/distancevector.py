@@ -1,6 +1,8 @@
 from network import Network
 import sys
 
+
+
 def parse_topology(topology):
     """
     Parses the topology file and returns a graph represented as a dictionary of dictionaries.
