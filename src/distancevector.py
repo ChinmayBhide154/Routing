@@ -11,24 +11,7 @@ def parse_topology(topology):
             graph[r2] = {}
         graph[r2][r1] = dist  # Assuming the graph is undirected
     return graph
-'''
-def bellman_ford(dst, routers, links):
-    """
-    Runs the Bellman-Ford algorithm for a given destination router.
-    """
-    INFINITY = float('inf')
-    distance = {r: INFINITY for r in routers}
-    nexthop = {r: dst for r in routers}
 
-    distance[dst] = 0
-
-    for _ in range(len(routers) - 1):
-        for (r1, r2, dist) in links:
-            if distance[r1] + dist < distance[r2]:
-                distance[r2] = distance[r1] + dist
-                nexthop[r2] = r1
-
-    return distance, nexthop
 '''
 def bellman_ford(dst, routers, links):
     """
@@ -64,10 +47,42 @@ def bellman_ford(dst, routers, links):
         paths[router] = path
 
     # Print paths
-    for router, path in paths.items():
-        print(f"Path from {router} to {dst}: {' -> '.join(map(str, path))}")
+    #for router, path in paths.items():
+    #    print(f"Path from {router} to {dst}: {' -> '.join(map(str, path))}")
+    print(paths)
     
     return distance, nexthop
+'''
+def bellman_ford(dst, routers, links):
+    """
+    Runs the Bellman-Ford algorithm for a given destination router and keeps track of the first hop.
+    """
+    INFINITY = float('inf')
+    distance = {r: INFINITY for r in routers}
+    nexthop = {r: None for r in routers}  # This will store the first hop.
+
+    distance[dst] = 0
+    nexthop[dst] = dst  # The next hop from the destination to itself is the destination.
+
+    for _ in range(len(routers) - 1):
+        for (r1, r2, dist) in links:
+            # When checking r1 to r2
+            if distance[r1] + dist < distance[r2]:
+                distance[r2] = distance[r1] + dist
+                if r1 == dst:
+                    nexthop[r2] = r2  # First hop for destination r2 is r2 itself if coming from dst
+                else:
+                    nexthop[r2] = nexthop[r1] if nexthop[r1] is not None else r1
+            # When checking r2 to r1
+            if distance[r2] + dist < distance[r1]:
+                distance[r1] = distance[r2] + dist
+                if r2 == dst:
+                    nexthop[r1] = r1  # First hop for destination r1 is r1 itself if coming from dst
+                else:
+                    nexthop[r1] = nexthop[r2] if nexthop[r2] is not None else r2
+
+    return distance, nexthop
+
 def distance_vector_routing(topology):
     """
     Simulates the Distance Vector Routing Protocol using the Bellman-Ford algorithm.
@@ -95,35 +110,6 @@ def write_output_file(distance_vectors, next_hops, messages):
             for dst in sorted(distance_vectors[router].keys()):
                 if distance_vectors[router][dst] != float('inf'):
                     file.write(f"{dst} {next_hops[router][dst]} {distance_vectors[router][dst]}\n")
-
-def find_path(source, destination, next_hops, path=None):
-    """
-    Recursively finds the path from source to destination using the next hops.
-    """
-    # Initialize the path list on the first call
-    if path is None:
-        path = [source]
-
-    # Base case: If source is the same as destination, the path is complete
-    if source == destination:
-        return path
-
-    # If there is no next hop from source to destination, return None
-    if destination not in next_hops[source] or next_hops[source][destination] is None:
-        return None
-
-    # Recursive case: get the next hop toward the destination
-    next_hop = next_hops[source][destination]
-    
-    # Detect loops: if next_hop is already in the path, we have a loop
-    if next_hop in path:
-        return None
-    
-    # Append the next hop to the path
-    path.append(next_hop)
-    
-    # Recursively find the rest of the path
-    return find_path(next_hop, destination, next_hops, path)
 
 
 if __name__ == '__main__':
@@ -159,12 +145,5 @@ if __name__ == '__main__':
     # Example usage:
     source = 1
     destination = 4
-    # Assume next_hops is a dictionary of dictionaries
-    # next_hops = { ... }
 
-    path = find_path(source, destination, final_next_hops)
-    if path:
-        print("Path found:", " -> ".join(map(str, path)))
-    else:
-        print(f"No path found from {source} to {destination}.")
 
