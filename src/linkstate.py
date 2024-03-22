@@ -33,6 +33,31 @@ def calculate_shortest_paths(graph, nodes):
             results[node][target] = (result.nodes, result.total_cost)
     return results
 
+def print_shortest_paths(paths, messages_file_path='C:\\Git Repositories\\Routing\\src\\message.txt', output_file_path='C:\\Git Repositories\\Routing\\src\\output.txt'):
+    # Load messages from the file and parse them into a dict with (src, dest) as keys
+    messages_dict = {}
+    with open(messages_file_path, 'r') as msg_file:
+        for line in msg_file:
+            parts = line.strip().split(' ', 2)  # Split on the first two spaces only
+            if len(parts) == 3:
+                src, dest, message = parts
+                src, dest = int(src), int(dest)  # Convert src and dest to integers
+                messages_dict[(src, dest)] = message
+
+    # Write paths and associated messages to the output file in append mode
+    with open(output_file_path, 'a') as file:
+        for (src, dest), message in messages_dict.items():
+            if src in paths and dest in paths[src]:
+                path, cost = paths[src][dest]
+                if path:
+                    hops_str = ' '.join(map(str, path))
+                    file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}.\n")
+                else:  # Fallback in case there's no path (which shouldn't happen in a connected graph)
+                    file.write(f"from {src} to {dest} message {message}. No valid path found.\n")
+            else:
+                file.write(f"from {src} to {dest} message {message}. Path information not available.\n")
+            file.write("\n")
+'''
 def print_shortest_paths(paths):
     # Load messages from the file
     with open('C:\\Git Repositories\\Routing\\src\\message.txt', 'r') as msg_file:
@@ -52,7 +77,7 @@ def print_shortest_paths(paths):
                     message = "No message provided."
 
             file.write("\n")
-
+'''
 def print_shortest_paths1(paths):
     with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'w') as file:
         for src, targets in paths.items():

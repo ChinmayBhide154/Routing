@@ -28,10 +28,7 @@
 4 4 1 
 5 5 0 
 
-from 1 to 1 cost 0 hops 1 message 2 1 here is a message from 2 to 1.
-from 1 to 2 cost 6 hops 1 4 5 2 message 3 5 this message gets sent from 3 to 5.
+from 2 to 1 cost 6 hops 2 5 4 1 message here is a message from 2 to 1.
 
-
-
-
+from 3 to 5 cost 7 hops 3 2 5 message this message gets sent from 3 to 5.
 
