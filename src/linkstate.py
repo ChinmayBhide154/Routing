@@ -34,6 +34,26 @@ def calculate_shortest_paths(graph, nodes):
     return results
 
 def print_shortest_paths(paths):
+    # Load messages from the file
+    with open('C:\\Git Repositories\\Routing\\src\\message.txt', 'r') as msg_file:
+        messages = msg_file.readlines()
+    
+    # Write paths and associated messages to the output file
+    with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'a') as file:
+        message_index = 0  # Keep track of which message we're on
+        for src, targets in paths.items():
+            for dest, (path, cost) in targets.items():
+                if message_index < len(messages):  # Check to ensure there's a message to write
+                    message = messages[message_index].strip()  # Remove newline characters
+                    message_index += 1
+                    hops_str = ' '.join(map(str, path))
+                    file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}.\n")
+                else:
+                    message = "No message provided."
+
+            file.write("\n")
+
+def print_shortest_paths1(paths):
     with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'w') as file:
         for src, targets in paths.items():
             print(f"Paths from node {src}:")
@@ -43,6 +63,8 @@ def print_shortest_paths(paths):
                 else:
                     file.write(f"{dest} {path[0]} {cost} \n")
             file.write(f"\n")
+
+
 
 if __name__ == '__main__':
     # Original edges
@@ -63,7 +85,9 @@ if __name__ == '__main__':
     # Continue with your existing process
     nodes = {1, 2, 3, 4, 5}
     paths = calculate_shortest_paths(network_graph, nodes)
+    print_shortest_paths1(paths)
     print_shortest_paths(paths)
+
 
 
 
