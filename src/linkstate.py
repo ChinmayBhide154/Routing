@@ -57,29 +57,9 @@ def print_shortest_paths(paths, messages_file_path='C:\\Git Repositories\\Routin
             else:
                 file.write(f"from {src} to {dest} message {message}. Path information not available.\n")
             file.write("\n")
-'''
-def print_shortest_paths(paths):
-    # Load messages from the file
-    with open('C:\\Git Repositories\\Routing\\src\\message.txt', 'r') as msg_file:
-        messages = msg_file.readlines()
-    
-    # Write paths and associated messages to the output file
-    with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'a') as file:
-        message_index = 0  # Keep track of which message we're on
-        for src, targets in paths.items():
-            for dest, (path, cost) in targets.items():
-                if message_index < len(messages):  # Check to ensure there's a message to write
-                    message = messages[message_index].strip()  # Remove newline characters
-                    message_index += 1
-                    hops_str = ' '.join(map(str, path))
-                    file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}.\n")
-                else:
-                    message = "No message provided."
 
-            file.write("\n")
-'''
 def print_shortest_paths1(paths):
-    with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'w') as file:
+    with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'a') as file:
         for src, targets in paths.items():
             print(f"Paths from node {src}:")
             for dest, (path, cost) in targets.items():
@@ -88,6 +68,21 @@ def print_shortest_paths1(paths):
                 else:
                     file.write(f"{dest} {path[0]} {cost} \n")
             file.write(f"\n")
+
+def apply_single_change(edges, change):
+    src, dest, new_cost = change
+    # Update or add the link
+    found = False
+    for i, (s, d, _) in enumerate(edges):
+        if s == src and d == dest:
+            if new_cost == -999:
+                edges.pop(i)  # Remove the link if cost is -999
+            else:
+                edges[i] = (src, dest, new_cost)  # Update existing link
+            found = True
+            break
+    if not found and new_cost != -999:
+        edges.append((src, dest, new_cost))  # Add new link
 
 
 
@@ -100,7 +95,9 @@ if __name__ == '__main__':
         (4, 1, 1),
         (4, 5, 1)
     ]
-    
+
+    changes_file_path = 'C:\\Git Repositories\\Routing\\src\\changes.txt'
+
     # Simulate the "flooding" to distribute LSI across all nodes
     complete_edges = populate_linkstate_info(edges)
     
@@ -112,6 +109,22 @@ if __name__ == '__main__':
     paths = calculate_shortest_paths(network_graph, nodes)
     print_shortest_paths1(paths)
     print_shortest_paths(paths)
+
+    with open(changes_file_path, 'r') as changes_file:
+        for line in changes_file:
+            change = tuple(map(int, line.strip().split()))
+            apply_single_change(edges, change)  # Apply the change
+            
+            # Rebuild the graph, recalculate paths, and reprint after each change
+            network_graph = build_graph(edges)
+            paths = calculate_shortest_paths(network_graph, nodes)
+            print_shortest_paths1(paths)
+            print_shortest_paths(paths)
+            #print_shortest_paths1(paths)
+
+
+
+
 
 
 
