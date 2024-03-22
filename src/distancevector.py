@@ -12,47 +12,6 @@ def parse_topology(topology):
         graph[r2][r1] = dist  # Assuming the graph is undirected
     return graph
 
-'''
-def bellman_ford(dst, routers, links):
-    """
-    Runs the Bellman-Ford algorithm for a given destination router and prints paths.
-    """
-    INFINITY = float('inf')
-    distance = {r: INFINITY for r in routers}
-    nexthop = {r: None for r in routers}
-
-    distance[dst] = 0
-    nexthop[dst] = dst  # The next hop from the destination to itself is the destination
-
-    for _ in range(len(routers) - 1):
-        for (r1, r2, dist) in links:
-            if distance[r1] + dist < distance[r2]:
-                distance[r2] = distance[r1] + dist
-                nexthop[r2] = r1
-            if distance[r2] + dist < distance[r1]:  # Check the path in reverse as well
-                distance[r1] = distance[r2] + dist
-                nexthop[r1] = r2
-
-    # Now, let's find and print the path for each router to the destination
-    paths = {}
-    for router in routers:
-        path = []
-        current = router
-        while current is not None:
-            path.append(current)
-            if current == dst:
-                break
-            current = nexthop[current]
-        path.reverse()  # Reverse the path since we built it backwards
-        paths[router] = path
-
-    # Print paths
-    #for router, path in paths.items():
-    #    print(f"Path from {router} to {dst}: {' -> '.join(map(str, path))}")
-    print(paths)
-    
-    return distance, nexthop
-'''
 def bellman_ford(dst, routers, links):
     """
     Runs the Bellman-Ford algorithm for a given destination router and keeps track of the first hop.
@@ -141,9 +100,5 @@ if __name__ == '__main__':
     # Returning the final distance vectors and next hops to check correctness
     print(final_distance_vectors, final_next_hops, "C:\\Git Repositories\\Routing\\src\\output.txt")
 
-
-    # Example usage:
-    source = 1
-    destination = 4
 
 
