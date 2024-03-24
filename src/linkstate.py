@@ -33,7 +33,7 @@ def calculate_shortest_paths(graph, nodes):
             results[node][target] = (result.nodes, result.total_cost)
     return results
 
-def print_shortest_paths(paths, messages_file_path='C:\\Git Repositories\\Routing\\src\\message.txt', output_file_path='C:\\Git Repositories\\Routing\\src\\output.txt'):
+def print_shortest_paths(paths, messages_file_path='C:\\Users\\death\\Routing\\src\\message.txt', output_file_path='C:\\Users\\death\\Routing\\src\\output.txt'):
     # Load messages from the file and parse them into a dict with (src, dest) as keys
     messages_dict = {}
     with open(messages_file_path, 'r') as msg_file:
@@ -59,7 +59,7 @@ def print_shortest_paths(paths, messages_file_path='C:\\Git Repositories\\Routin
             file.write("\n")
 
 def print_shortest_paths1(paths):
-    with open('C:\\Git Repositories\\Routing\\src\\output.txt', 'a') as file:
+    with open('C:\\Users\\death\\Routing\\src\\output.txt', 'a') as file:
         for src, targets in paths.items():
             print(f"Paths from node {src}:")
             for dest, (path, cost) in targets.items():
@@ -96,7 +96,7 @@ if __name__ == '__main__':
         (4, 5, 1)
     ]
 
-    changes_file_path = 'C:\\Git Repositories\\Routing\\src\\changes.txt'
+    changes_file_path = 'C:\\Users\\death\\Routing\\src\\changes.txt'
 
     # Simulate the "flooding" to distribute LSI across all nodes
     complete_edges = populate_linkstate_info(edges)
