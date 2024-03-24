@@ -1,16 +1,18 @@
-def parse_topology(topology):
+import sys
+
+def parse_topology(file_path):
     """
-    Parses the topology file and returns a graph represented as a dictionary of dictionaries.
+    Reads the topology from a file and returns it as a list of tuples.
+    Each line in the file should be in the format: r1 r2 dist
     """
-    graph = {}
-    for r1, r2, dist in topology:
-        if r1 not in graph:
-            graph[r1] = {}
-        graph[r1][r2] = dist
-        if r2 not in graph:
-            graph[r2] = {}
-        graph[r2][r1] = dist  # Assuming the graph is undirected
-    return graph
+    topology = []
+    with open(file_path, 'r') as file:
+        for line in file:
+            parts = line.strip().split()
+            if len(parts) == 3:
+                r1, r2, dist = parts
+                topology.append((int(r1), int(r2), int(dist)))
+    return topology
 
 def bellman_ford(dst, routers, links):
     INFINITY = float('inf')
@@ -48,19 +50,18 @@ def distance_vector_routing(topology):
     """
     Simulates the Distance Vector Routing Protocol using the Bellman-Ford algorithm.
     """
-    graph = parse_topology(topology)
-    routers = list(graph.keys())
-    links = [(r1, r2, graph[r1][r2]) for r1 in graph for r2 in graph[r1]]
+    # Assuming topology is already a list of tuples (r1, r2, dist)
+    routers = list(set([link[0] for link in topology] + [link[1] for link in topology]))
+    links = topology
 
     distance_vectors = {}
     next_hops = {}
-    paths = {}
 
     for router in routers:
         distance_vectors[router], next_hops[router] = bellman_ford(router, routers, links)
 
-
     return distance_vectors, next_hops
+
 
 def write_output_file(distance_vectors, next_hops, messages, output_file_path='output.txt', append_mode=False):
     """
@@ -72,27 +73,36 @@ def write_output_file(distance_vectors, next_hops, messages, output_file_path='o
         for router in sorted(distance_vectors.keys()):
             for dst in sorted(distance_vectors[router].keys()):
                 if distance_vectors[router][dst] != float('inf'):
-                    # Assuming next hop can be derived from next_hops dictionary
                     next_hop = next_hops[router].get(dst, None)
                     cost = distance_vectors[router][dst]
                     file.write(f"{dst} {next_hop if next_hop else 'None'} {cost}\n")
-            file.write("\n")  # Newline for separation between routers
-            for src, dst, message_text in messages:
-                if src in next_hops and dst in next_hops[src]:
-                    path = [src]
-                    current = src
-                    while current != dst:
-                        current = next_hops[current][dst]
-                        path.append(current)
+            file.write("\n")  # Separation between router
+        for src, dst, message_text in messages:
+            if src in next_hops and dst in next_hops[src] and dst in distance_vectors[src] and distance_vectors[src][dst] != float('inf'):
+                path = [src]
+                current = src
+                while current != dst:
+                    next_router = next_hops[current].get(dst, None)
+                    if not next_router:  # Handle case where next hop is None or not found
+                        path = None
+                        break
+                    path.append(next_router)
+                    current = next_router
+                
+                if path:  # Path exists
                     cost = distance_vectors[src][dst]
-                    path_str = ' -> '.join(map(str, path))
-                    file.write(f"from {src} to {dst} cost {cost} hops {path_str} message {message_text}.\n")
+                    hops_str = ' '.join(map(str, path))
+                    file.write(f"from {src} to {dst} cost {cost} hops {hops_str} message {message_text}.\n")
+                else:  # Path does not exist
+                    file.write(f"from {src} to {dst} cost infinite hops unreachable message {message_text}.\n")
+            else:  # Destination unreachable
+                file.write(f"from {src} to {dst} cost infinite hops unreachable message {message_text}.\n")
+
+            file.write("\n")  # Ensure there's a newline after appending message paths
 
 
-def read_changes(changes_file_path='C:\\Users\\death\\Routing\\src\\changes.txt'):
-    """
-    Reads changes from a file and returns them as a list of tuples.
-    """
+
+def read_changes(changes_file_path):
     changes = []
     with open(changes_file_path, 'r') as file:
         for line in file:
@@ -102,124 +112,55 @@ def read_changes(changes_file_path='C:\\Users\\death\\Routing\\src\\changes.txt'
                 changes.append((r1, r2, cost))
     return changes
 
-def find_path(source, destination, next_hops):
-    if source == destination:
-        return [source]
 
-    path = [source]
-    current = source
-
-    while current != destination:
-        # Retrieve the next hop for the current node towards the destination
-        next_hop = next_hops[current]
-
-        # Check for loops or incorrect next hop
-        if next_hop == current or next_hop in path:
-            #print(f"Loop or incorrect next hop detected from {current} to {destination}. Next hop: {next_hop}")
-            return None
-
-        path.append(next_hop)
-        current = next_hop
-        # Break if no progress is made (shouldn't happen with correct next hop data)
-        if current == destination:
-            break
-
-    return path
-
-
-
-def read_messages(messages_file_path='C:\\Users\\death\\Routing\\src\\message.txt'):
+def read_messages(file_path):  # Corrected parameter name to file_path
     """
     Reads messages from a file and returns them as a list of tuples.
     """
-    messages = []
-    with open(messages_file_path, 'r') as msg_file:
+    messages_list = []  # Renamed variable to avoid confusion with the function parameter
+    with open(file_path, 'r') as msg_file:  # Corrected to use file_path
         for line in msg_file:
             parts = line.strip().split(' ', 2)  # Split on the first two spaces only
             if len(parts) == 3:
                 src, dest, message = parts
                 src, dest = int(src), int(dest)  # Convert src and dest to integers
-                messages.append((src, dest, message))
-    return messages
+                messages_list.append((src, dest, message))
+    return messages_list
 
-def get_complete_paths(distance_vectors, next_hops):
-    output = []
-    for src_router in sorted(distance_vectors.keys()):
-        for dst_router in sorted(distance_vectors[src_router].keys()):
-            if src_router == dst_router:
-                continue
-            path = [src_router]
-            next_router = src_router
-            while next_router != dst_router:
-                next_router = next_hops[next_router].get(dst_router)
-                if next_router is None:
-                    break
-                path.append(next_router)
-            if next_router is not None:
-                cost = distance_vectors[src_router][dst_router]
-                path_str = ' -> '.join(map(str, path))
-                output.append(f"from {src_router} to {dst_router} cost {cost} hops {path_str}")
-    return '\n'.join(output)
 
-def append_specific_message_paths(output_file_path, distance_vectors, next_hops, messages):
-    """
-    Appends specific message paths based on current routing information to the output file.
-    """
-    with open(output_file_path, 'a') as file:
-        for src, dst, message_text in messages:
-            path = [src]
-            current = src
-            while current != dst:
-                current = next_hops[current].get(dst, None)
-                if current is None:  # Break if there's no valid next hop
-                    break
-                path.append(current)
-            if current:
-                cost = distance_vectors[src][dst]
-                hops_str = ' '.join(map(str, path))
-                file.write(f"from {src} to {dst} cost {cost} hops {hops_str} message {message_text}.\n")
-        file.write("\n")  # Ensure there's a newline after appending message paths
-
+def apply_changes_to_topology(topology, changes):
+    updated_topology = topology[:]
+    for src, dest, cost in changes:
+        if cost == -999:  # Remove the link
+            updated_topology = [link for link in updated_topology if not ((link[0] == src and link[1] == dest) or (link[0] == dest and link[1] == src))]
+        else:  # Add or update the link
+            # Remove existing link if present
+            updated_topology = [link for link in updated_topology if not ((link[0] == src and link[1] == dest) or (link[0] == dest and link[1] == src))]
+            # Add the new or updated link
+            updated_topology.append((src, dest, cost))
+    return updated_topology
 
 
 if __name__ == '__main__':
-    topology = [
-        (1, 2, 8),
-        (2, 3, 3),
-        (2, 5, 4),
-        (4, 1, 1),
-        (4, 5, 1)
-    ]
+    if len(sys.argv) != 4:
+        print("Usage: ./dvr <topologyFile> <messageFile> <changesFile>")
+        sys.exit(1)
 
-    # Read messages from the file instead of hardcoded messages
-    messages = read_messages('C:\\Users\\death\\Routing\\src\\message.txt')
-    distance_vectors, next_hops = distance_vector_routing(topology)
+    topology_file = sys.argv[1]
+    message_file = sys.argv[2]
+    changes_file = sys.argv[3]
+
+    # Use the provided file paths instead of hardcoded paths
+    initial_topology = parse_topology(topology_file)  # Assume you have a function to read topology from a file
+    messages = read_messages(message_file)
+    changes = read_changes(changes_file)
+
+    # Initial routing simulation
+    distance_vectors, next_hops = distance_vector_routing(initial_topology)
     write_output_file(distance_vectors, next_hops, messages, 'output.txt', append_mode=False)
 
-    changes = read_changes('C:\\Users\\death\\Routing\\src\\changes.txt')
+    # Apply each change and recalculate routing
     for change in changes:
-        r1, r2, cost = change
-        if cost == -999:  # Remove link
-            topology = [(src, dst, c) for src, dst, c in topology if not ((src == r1 and dst == r2) or (src == r2 and dst == r1))]
-        else:  # Add/update link
-            # Remove existing link if present
-            topology = [(src, dst, c) for src, dst, c in topology if not ((src == r1 and dst == r2) or (src == r2 and dst == r1))]
-            topology.append((r1, r2, cost))  # Add new/updated link
-
-        # Recalculate routing tables after each change
-    distance_vectors, next_hops = distance_vector_routing(topology)
-    write_output_file(distance_vectors, next_hops, [], 'output.txt', append_mode=False)
-    append_specific_message_paths('output.txt', distance_vectors, next_hops, messages)
-
-    # Processing changes
-    for change in changes:
-        # Apply the change...
-
-        # Recalculate routing tables after each change
-        distance_vectors, next_hops = distance_vector_routing(topology)
-
-        # Append the updated router tables to 'output.txt'
-        write_output_file(distance_vectors, next_hops, [], 'output.txt', append_mode=True)
-
-        # Append the updated specific message paths
-        append_specific_message_paths('output.txt', distance_vectors, next_hops, messages)
+        updated_topology = apply_changes_to_topology(initial_topology, [change])
+        distance_vectors, next_hops = distance_vector_routing(updated_topology)
+        write_output_file(distance_vectors, next_hops, messages, 'output.txt', append_mode=True)

@@ -51,11 +51,11 @@ def print_shortest_paths(paths, messages_file_path='C:\\Users\\death\\Routing\\s
                 path, cost = paths[src][dest]
                 if path:
                     hops_str = ' '.join(map(str, path))
-                    file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}.\n")
+                    file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}\n")
                 else:  # Fallback in case there's no path (which shouldn't happen in a connected graph)
-                    file.write(f"from {src} to {dest} message {message}. No valid path found.\n")
+                    file.write(f"from {src} to {dest} cost infinite hops unreachable message {message}\n")
             else:
-                file.write(f"from {src} to {dest} message {message}. Path information not available.\n")
+                file.write(f"from {src} to {dest} cost infinite hops unreachable message {message}.\n")
             file.write("\n")
 
 def print_shortest_paths1(paths):
