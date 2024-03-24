@@ -1,4 +1,5 @@
-from dijkstar import Graph, find_path
+import sys
+from dijkstar import Graph, find_path, NoPathError
 
 def build_graph(edges):
     graph = Graph()
@@ -23,51 +24,60 @@ def populate_linkstate_info(edges):
     # Convert the unified LSI back to the edges format
     return list(complete_lsi)
 
+def edge_cost_func(u, v, edge, prev_edge):
+    return edge['cost']
 
 def calculate_shortest_paths(graph, nodes):
     results = {}
     for node in nodes:
         results[node] = {}
         for target in nodes:
-            result = find_path(graph, node, target, cost_func=lambda u, v, edge, _: edge['cost'])
-            results[node][target] = (result.nodes, result.total_cost)
+            if node != target:
+                try:
+                    result = find_path(graph, node, target, cost_func=edge_cost_func)
+                    results[node][target] = (result.nodes, result.total_cost)
+                except NoPathError:
+                    results[node][target] = ([], float('inf'))  # No path found
+            else:
+                results[node][target] = ([node], 0)  # Path to itself
     return results
 
-def print_shortest_paths(paths, messages_file_path='C:\\Users\\death\\Routing\\src\\message.txt', output_file_path='C:\\Users\\death\\Routing\\src\\output.txt'):
-    # Load messages from the file and parse them into a dict with (src, dest) as keys
+def print_shortest_paths(paths, messages_file_path, output_file_path):
+    # Load messages from the file
     messages_dict = {}
     with open(messages_file_path, 'r') as msg_file:
         for line in msg_file:
             parts = line.strip().split(' ', 2)  # Split on the first two spaces only
             if len(parts) == 3:
-                src, dest, message = parts
-                src, dest = int(src), int(dest)  # Convert src and dest to integers
+                src, dest = map(int, parts[:2])  # Correctly converting first two parts to integers
+                message = parts[2]
                 messages_dict[(src, dest)] = message
 
-    # Write paths and associated messages to the output file in append mode
+    # Write paths and messages to the output file
     with open(output_file_path, 'a') as file:
         for (src, dest), message in messages_dict.items():
-            if src in paths and dest in paths[src]:
+            # Check if both src and dest are in the paths dict and a path exists
+            if src in paths and dest in paths[src] and paths[src][dest][0]:
                 path, cost = paths[src][dest]
-                if path:
-                    hops_str = ' '.join(map(str, path))
-                    file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}\n")
-                else:  # Fallback in case there's no path (which shouldn't happen in a connected graph)
-                    file.write(f"from {src} to {dest} cost infinite hops unreachable message {message}\n")
+                hops_str = ' '.join(map(str, path))
+                file.write(f"from {src} to {dest} cost {cost} hops {hops_str} message {message}\n")
             else:
-                file.write(f"from {src} to {dest} cost infinite hops unreachable message {message}.\n")
+                # Path does not exist or one of the nodes is not in the topology
+                file.write(f"from {src} to {dest} cost infinite hops unreachable message {message}\n")
             file.write("\n")
 
-def print_shortest_paths1(paths):
-    with open('C:\\Users\\death\\Routing\\src\\output.txt', 'a') as file:
+
+
+
+def print_shortest_paths1(paths, output_file_path):
+    with open(output_file_path, 'a') as file:
         for src, targets in paths.items():
-            print(f"Paths from node {src}:")
             for dest, (path, cost) in targets.items():
                 if len(path) > 1:
-                    file.write(f"{dest} {path[1]} {cost} \n")
+                    file.write(f"{dest} {path[1]} {cost}\n")
                 else:
-                    file.write(f"{dest} {path[0]} {cost} \n")
-            file.write(f"\n")
+                    file.write(f"{dest} {path[0]} {cost}\n")
+            file.write("\n")
 
 def apply_single_change(edges, change):
     src, dest, new_cost = change
@@ -87,43 +97,46 @@ def apply_single_change(edges, change):
 
 
 if __name__ == '__main__':
-    # Original edges
-    edges = [
-        (1, 2, 8),
-        (2, 3, 3),
-        (2, 5, 4),
-        (4, 1, 1),
-        (4, 5, 1)
-    ]
+    if len(sys.argv) != 4:
+        print("Usage: python lsr.py <topologyFile> <messageFile> <changesFile>")
+        sys.exit(1)
 
-    changes_file_path = 'C:\\Users\\death\\Routing\\src\\changes.txt'
+    topology_file_path = sys.argv[1]
+    messages_file_path = sys.argv[2]
+    changes_file_path = sys.argv[3]
+    output_file_path = 'output.txt'  # Define the output file path here
 
-    # Simulate the "flooding" to distribute LSI across all nodes
+    # Read the initial topology from the file
+    edges = []
+    with open(topology_file_path, 'r') as file:
+        for line in file:
+            src, dest, cost = map(int, line.strip().split())
+            edges.append((src, dest, cost))
+
+    # Perform initial link state routing computations
     complete_edges = populate_linkstate_info(edges)
-    
-    # Build the network graph with the complete LSI known by all nodes
     network_graph = build_graph(complete_edges)
-    
-    # Continue with your existing process
-    nodes = {1, 2, 3, 4, 5}
+    nodes = set(sum(([src, dest] for src, dest, _ in edges), []))
     paths = calculate_shortest_paths(network_graph, nodes)
-    print_shortest_paths1(paths)
-    print_shortest_paths(paths)
 
+    # Initial output before applying changes
+    print_shortest_paths1(paths, output_file_path)
+    print_shortest_paths(paths, messages_file_path, output_file_path)
+
+    # Read and apply changes from the changes file
     with open(changes_file_path, 'r') as changes_file:
         for line in changes_file:
             change = tuple(map(int, line.strip().split()))
-            apply_single_change(edges, change)  # Apply the change
-            
-            # Rebuild the graph, recalculate paths, and reprint after each change
-            network_graph = build_graph(edges)
+            apply_single_change(edges, change)
+
+            # Recompute with updated topology
+            complete_edges = populate_linkstate_info(edges)
+            network_graph = build_graph(complete_edges)
             paths = calculate_shortest_paths(network_graph, nodes)
-            print_shortest_paths1(paths)
-            print_shortest_paths(paths)
-            #print_shortest_paths1(paths)
 
-
-
+            # Output after each change
+            print_shortest_paths1(paths, output_file_path)
+            print_shortest_paths(paths, messages_file_path, output_file_path)
 
 
 
