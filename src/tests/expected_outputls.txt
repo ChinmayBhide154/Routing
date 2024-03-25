@@ -40,9 +40,9 @@
 5 5 1
 6 6 0
 
-from 2 to 1 cost 6 hops 2 5 4 1 message here is a message from 2 to 1.
+from 2 to 1 cost 6 hops 2 5 4 1 message here is a message from 2 to 1
 
-from 3 to 5 cost 7 hops 3 2 5 message this message gets sent from 3 to 5.
+from 3 to 5 cost 7 hops 3 2 5 message this message gets sent from 3 to 5
 
 1 1 0
 2 4 2
@@ -86,9 +86,9 @@ from 3 to 5 cost 7 hops 3 2 5 message this message gets sent from 3 to 5.
 5 5 1
 6 6 0
 
-from 2 to 1 cost 2 hops 2 4 1 message here is a message from 2 to 1.
+from 2 to 1 cost 2 hops 2 4 1 message here is a message from 2 to 1
 
-from 3 to 5 cost 5 hops 3 2 4 5 message this message gets sent from 3 to 5.
+from 3 to 5 cost 5 hops 3 2 4 5 message this message gets sent from 3 to 5
 
 1 1 0
 2 4 6
@@ -132,7 +132,7 @@ from 3 to 5 cost 5 hops 3 2 4 5 message this message gets sent from 3 to 5.
 5 5 1
 6 6 0
 
-from 2 to 1 cost 6 hops 2 5 4 1 message here is a message from 2 to 1.
+from 2 to 1 cost 6 hops 2 5 4 1 message here is a message from 2 to 1
 
-from 3 to 5 cost 7 hops 3 2 5 message this message gets sent from 3 to 5.
+from 3 to 5 cost 7 hops 3 2 5 message this message gets sent from 3 to 5
 

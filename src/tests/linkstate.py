@@ -1,8 +1,7 @@
-## @file linkstate
+## @package linkstate
 #  This simulates linkstate Routing Protocol using the Dijkstra algorithm.
 import sys
 from dijkstar import Graph, find_path, NoPathError
-
 ## Build a graph from a list of edges.
 #  @param edges List of tuples (source, destination, cost).
 #  @return Graph object populated with edges and costs.
