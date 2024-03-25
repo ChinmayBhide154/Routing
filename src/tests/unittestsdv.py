@@ -17,10 +17,10 @@ class TestDistanceVector(unittest.TestCase):
     #print("Testing changes (new link and erasing link)")
     def test_case_1(self):
         self.run_distance_vector('topology.txt', 'message.txt', 'changes.txt', 'expected_output.txt')
-    print("Testing message between unreachable nodes")
+    #print("Testing message between unreachable nodes")
     def test_case_2(self):
        self.run_distance_vector('topology.txt', 'message2.txt', 'changes.txt', 'expected_output2.txt')
-    
+    #print("Testing extended and different topology")
     def test_case_3(self):
        self.run_distance_vector('topology2.txt', 'message3.txt', 'changes.txt', 'expected_output3.txt')
 

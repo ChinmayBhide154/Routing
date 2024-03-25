@@ -1,4 +1,4 @@
-## @file distancevector
+## @package distancevector
 #  This simulates Distance Vector Routing Protocol using the Bellman-Ford algorithm.
 import sys
 
